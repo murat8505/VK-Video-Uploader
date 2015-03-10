@@ -20,8 +20,8 @@ if(typeof(profiles) == 'undefined') var profiles={};
 var user={}; user.token = api_token;
 
 var app = {
-	ver: 2,
-	channel: 'master', // master or beta
+	ver: 2.1,
+	channel: 'beta', // master or beta
 	update_uri: 'https://github.com/seiya-dev/VK-Video-Uploader/archive/',
 	video_max_size: 2147483648,
 	boolean:{
@@ -34,7 +34,7 @@ var app = {
 
 var api = {
 	app_id: 4218952,
-	ver: 5.27,
+	ver: 5.28,
 	api_lang: 'en',
 	required_access: 327696,
 	required_access_string: 'video,groups,offline',
@@ -436,7 +436,7 @@ function prepUploaderBox(){
 	
 	var param = {}; // параметры:
 	param.group_id = $('.gr_list') ? -$('.gr_list').value : 0; // oid = 0 ; текущий пользователь
-	param.title = $('[name="name"]').value;
+	param.title = $('[name="name"]').value === '' ? 'No name' : $('[name="name"]').value;
 	param.description = $('[name="description"]').value;
 	param.album_id = Number($('[name="album_id"]').value);
 	param.wallpost = $('[name="wallpost"]').checked ? 1 : 0;
@@ -479,7 +479,7 @@ function reqUploaderBox(group_id,title,description,album_id,wallpost,repeat,priv
 			
 			vUplID++;
 			vUpl[vUplID] = updata.response.uploader_data;
-			vUpl[vUplID].embed_code = updata.response.embed_code.replace(/&api_hash=[^&]*/,'');
+			vUpl[vUplID].embed_code = updata.response.embed_code.replace(/&api_hash=[^&]*/,''); // remove apihash param from embed link
 			
 			var video_url='<a class="url" href="http://vk.com/video'+vUpl[vUplID].owner_id+'_'+vUpl[vUplID].video_id+'" target="_blank">'+field2text(vUpl[vUplID].title)+' (video'+vUpl[vUplID].owner_id+'_'+vUpl[vUplID].video_id+')</a>';
 			
@@ -490,9 +490,9 @@ function reqUploaderBox(group_id,title,description,album_id,wallpost,repeat,priv
 									  + '<div>'
 										  + '<span>Загрузка видео:</span>'
 										  + '<span class="manag">'
-											  + '<span class="button" title="Показать видео" onclick="'+load_video_js+'">i</span>'
-											  + '<span class="button" title="Скрыть/показать загрузчик" onclick="toggle($(\'#upl'+vUpl[vUplID].video_id+'\')); return false;">_</span>'
-											  + '<span class="button" title="Удалить загрузчик" onclick="$(\'#vfubox'+vUpl[vUplID].video_id+'\').remove(); return false;">x</span>'
+											  + '<span class="button btn" title="Показать видео" onclick="'+load_video_js+'">i</span>'
+											  + '<span class="button btn" title="Скрыть/показать загрузчик" onclick="toggle($(\'#upl'+vUpl[vUplID].video_id+'\'));">_</span>'
+											  + '<span class="button btn" title="Удалить загрузчик" onclick="$(\'#vfubox'+vUpl[vUplID].video_id+'\').remove();">x</span>'
 										  + '</span>'
 									  + '</div>'
 									  + '<div style="clear:both;"></div>'
@@ -542,7 +542,7 @@ function iframeload(id,stat) {
 
 function runUpload(upButton){
 	
-	console.log(upButton);
+	// console.log(upButton);
 	var fdid = upButton.dataset.id;
 	
 	if( !$('#file'+fdid).files[0] ){
@@ -558,7 +558,54 @@ function runUpload(upButton){
 
 }
 
-function loadVideo(){
-	 
- }
+// info box
 
+function loadVideo(video,key){
+	api.req("video.get",{videos:video+'_'+key,count:1},function(vdata){
+		if(vdata.response.count !== 0){
+			// console.log(vdata.response);
+			var videobox_json = vdata.response.items[0];
+			if(typeof(key)!='undefined'){
+				videobox_json.access_key = key;
+			}
+			openPlayerBox(videobox_json);
+		}
+		else{
+			openAlertBox('Видео не найдено.',[['closeAlertBox();','Закрыть']]);
+		}
+		if(vdata.error){
+			openAlertBox('Ошибка #'+vdata.error.error_code+': '+vdata.error.error_msg,[['closeAlertBox();','Закрыть']]);
+		}
+	});
+}
+
+function openPlayerBox(json){
+	// console.log(json);
+	var playerBoxUI = ''
+					+ '<div class="frame"><iframe src="'+json.player.replace(/&api_hash=[^&]*/,'')+'"></iframe></div>'
+					+ '<div class="info" id="videoData">'
+						+ '<div>Title: <input value="'+field2text(json.title)+'" readonly="readonly"/></div>'
+						+ '<div>Description: <textarea style="height:44px;" type="text" readonly="readonly">'+field2text(json.description)+'</textarea></div>'
+						+ '<div>Preview (130x 97): <input value="'+json.photo_130+'" readonly="readonly"/></div>'
+						+ '<div>Preview (320x240): <input value="'+json.photo_320+'" readonly="readonly"/></div>'
+						+ (json.photo_640?
+						  '<div>Preview (640x480): <input value="'+json.photo_640+'" readonly="readonly"/></div>':'')
+						+ (json.photo_800?
+						  '<div>Preview (800x450): <input value="'+json.photo_800+'" readonly="readonly"/></div>':'')
+						+ '<div><a href="#" onclick="loadVideo(\''+json.owner_id+'_'+json.id+'\',\''+json.access_key+'\'); return false;"> Перезагрузить фрейм </a></div>'
+					+ '</div>'
+					+ '';
+	$('#videobox').innerHTML = playerBoxUI;
+	$('body').style.overflow = 'hidden';
+	$('#videobg').style.display = 'block';
+	$('#videobox').style.display = 'block';
+	$('#videobg').onclick = function(){hideVideoBox();};
+	app.boolean.videobox_open = true;
+}
+function hideVideoBox(){
+	$('#videobox').innerHTML = '';
+	$('#videobox').style.display = 'none';
+	$('#videobg').style.display = 'none';
+	$('body').style.overflow = 'auto';
+	app.boolean.videobox_open = false;
+}
