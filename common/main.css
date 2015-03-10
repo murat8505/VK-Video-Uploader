@@ -1,0 +1,353 @@
+/* Alert Box */
+
+#alertbg{
+	position: fixed;
+	height: 100%;
+	width: 100%;
+	background: rgba(0,0,0,.8);
+	z-index: 200;
+	visibility: hidden;
+	top: 0;
+	left: 0;
+}
+#alertbox{
+	border: 1px solid #696969;
+	background: #fff;
+	color: black;
+	left: 50%;
+	top: 50%;
+	position: fixed;
+	overflow: hidden;
+	max-height: 600px;
+	max-width: 990px;
+	min-width: 220px;
+	min-height: 89px;
+	margin-left: -496px;
+	margin-top: -301px;
+}
+#alerttext{
+	max-height: 511px;
+	max-width: 970px;
+	text-align: center;
+	overflow: auto;
+	margin: 20px 10px;
+}
+#alertbuttons{
+	background-color: #F2F2F2;
+	border-top: 1px solid #E6E6E6;
+	padding: 12px 20px;
+	text-align: right;
+}
+#alertbuttons button{
+	width: 74px;
+	margin-left: 5px;
+}
+
+/* video box */
+#videobg{
+	position:fixed;
+	height:100%;
+	width:100%;
+	background:rgba(0,0,0,.8);
+	z-index:100;
+	display:none;
+	top:0;
+	left:0;
+}
+
+#videobg a{
+	font-size:50px;
+	line-height:.5;
+	position:absolute;
+	top:14px;
+	right:14px;
+	color:#f00;
+	cursor:pointer;
+}
+
+#videobg a:hover {
+	font-weight:900;
+	text-decoration:none;
+}
+#videobg a:active {
+	top:15px;
+}
+
+#videobox{
+	display:none;
+	z-index:101;
+	background:#fff;
+	color:black;
+	left:50%;
+	top:50%;
+	padding:5px;
+	width:900px;
+	margin-left:-455px;
+	height:350px;
+	margin-top:-180px;
+	position:fixed;
+	overflow:hidden;
+	border-radius:5px;
+}
+
+#videobox .frame {
+    margin-right: 5px;
+	float: left;
+}
+
+#videobox iframe{
+	vertical-align: top;
+	border-width: 0px;
+	height: 300px;
+	width: 533px;
+}
+#videobox .info{
+	margin-left: 538px;
+}
+#videobox .info input,#videobox .info textarea{
+	width: 356px;
+	margin: 0px;
+}
+
+/* Main */
+
+*{
+	box-sizing: content-box !important;
+}
+
+body{
+	overflow: auto;
+}
+#main{
+	margin: 0 auto;
+	width: 700px;
+	font-size: 12px;
+	line-height: 16px;
+	font-family: verdana,tahoma,arial,sans-serif,"Lucida Sans";
+}
+
+#user{
+	background-color: #F0F2F5;
+	padding: 5px;
+	overflow: hidden;
+}
+
+a {
+    color: #2b587a;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+a:hover{
+	text-decoration: underline;
+}
+
+#user .ava{
+	float: left;
+}
+
+#right_nav{
+	float: right;
+}
+
+#sh_addvideo{
+	width: 10px;
+	display: inline-block;
+	text-align: center;
+}
+
+.title{
+	background-color: #F0F2F5;
+	margin-top: 5px;
+	padding: 5px;
+	text-align: center;
+}
+
+.title .manag {
+    float: right;
+	margin-left: -100px;
+}
+
+.add_up{
+	border: 1px solid #F0F2F5;
+	border-width: 0px 1px 1px;
+	padding: 5px;
+	background-color: #F0F2F5;
+}
+
+select, option, input, textarea, button{
+	font: 12px/16px Verdana;
+	border:0;
+	padding:0;
+	margin:0;
+}
+
+select{
+	padding: 0 1px;
+}
+
+textarea{
+	resize: none;
+	height: 48px;
+}
+
+.UpUI{
+	background-color: #f0f2f5;
+}
+
+#remember{
+	margin: 2.5px 0 2.5px -13px;
+}
+
+input, textarea, button, .border{
+	border: 1px solid #DFDFDF;
+}
+
+table {
+    border-spacing: 0;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+td{
+	padding: 0;
+}
+
+.rStar{
+	color: red;
+}
+
+.w120{
+	width: 120px;
+}
+
+.w340{
+	width: 340px;
+}
+
+.w528{
+	width: 528px;
+}
+
+.w684{
+	width: 684px;
+}
+
+.w686{
+	width: 686px;
+}
+
+.w688{
+	width: 688px;
+}
+
+.block{
+	display: block;
+}
+
+.fRight{
+	float: right;
+}
+
+.tLeft{
+	text-align: left;
+}
+
+.tCenter{
+	text-align: center;
+}
+
+.tRight{
+	text-align: right;
+}
+
+.extra_option{
+	vertical-align: middle;
+	margin: -2px 5px 0;
+}
+
+.button{
+	cursor: default;
+	background-color: #fff;
+	border-color: #DFDFDF;
+	position: relative;
+	text-align: center;
+}
+.button:hover{
+	cursor: pointer;
+}
+.button:active {
+	top: 1px;
+	left: 1px;
+}
+
+.manag .button{
+	width: 16px;
+	padding: 1px;
+	display: inline-block;
+	margin-left: 5px;
+}
+
+.progress{
+	text-align: center;
+}
+
+.boxLeft {
+    display: inline-block;
+    vertical-align: top;
+    width: 77%;
+}
+
+.boxRight {
+    display: inline-block;
+    vertical-align: top;
+    width: 23%;
+}
+
+.upframe {
+    height: 36px;
+    vertical-align: top;
+}
+
+.marginLeft5{
+	margin-left: 5px;
+}
+
+.marginTop5{
+	margin-top: 5px;
+}
+
+.border0{
+	border-width: 0px;
+}
+
+.borderbox{
+	box-sizing: border-box !important;
+}
+
+.user{
+	margin-left: 55px;
+}
+
+#profiles{
+	padding-right: 18px;
+}
+
+.btn {
+	text-align: center;
+	color: #ffffff;
+	background: #3498db;
+	text-decoration: none;
+	display: inline-block;
+}
+
+.btn:hover {
+	background: #3cb0fd;
+	text-decoration: none;
+}
+
+.btn:active {
+	position: relative;
+	top: 1px;
+	left: 1px;
+}
