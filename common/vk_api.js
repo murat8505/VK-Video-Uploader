@@ -20,7 +20,7 @@ if(typeof(profiles) == 'undefined') var profiles={};
 var user={}; user.token = api_token;
 
 var app = {
-	ver: 2.1,
+	ver: 2.2,
 	channel: 'beta', // master or beta
 	update_uri: 'https://github.com/seiya-dev/VK-Video-Uploader/archive/',
 	video_max_size: 2147483648,
@@ -34,7 +34,7 @@ var app = {
 
 var api = {
 	app_id: 4218952,
-	ver: 5.28,
+	ver: 5.29,
 	api_lang: 'en',
 	required_access: 327696,
 	required_access_string: 'video,groups,offline',
@@ -345,7 +345,22 @@ function loadUploaderUI(ui){
 	}
 	
 	else if(ui=='group'){
-		$('.add_up').innerHTML = '<div style="text-align:center;">Not implemented yet</div>';
+		//$('.add_up').innerHTML = '<div style="text-align:center;">Not implemented yet</div>';
+		app.boolean.videouploader_ready = true;
+		var groupAddUI = '<div id="video_add">'
+							+'<div class="groupCustom"></div>'
+							+videotitle_field
+							+videodiscription_field
+							+'<div class="albumCustom"></div>'
+							+'<div class="tRight">'
+								+param_additionalSetting
+							+'</div>'
+							+'<div>'
+								+goButtonCreateUploader
+							+'</div>'
+						 '</div>';
+		$('.add_up').innerHTML=groupAddUI;
+		loadGroupsExtraUI();
 	}
 	
 }
@@ -386,7 +401,13 @@ function loadAlbums(add_albumid){
 
 function addAlbum(txt){
 	txt = typeof txt !== 'undefined' ? txt : '';
-	openAlertBox('<div>Введите название альбома:<br/><input type="text" name="toAlbumLoad" class="toAlbumLoad w528" value=""/></div>'+txt,[['toAlbumLoad();','Создать'],['closeAlertBox();','Отмена']]);
+	openAlertBox(
+		'<div>Введите название альбома:<br/><input type="text" name="toAlbumLoad" class="toAlbumLoad w528" value=""/></div>'+txt,
+		[
+			['toAlbumLoad();','Создать'],
+			['closeAlertBox();','Отмена']
+		]
+	);
 }
 function deleteAlbum(album_id){
 	// new feature!
@@ -432,11 +453,105 @@ function loadAlbumsList(album_id,totalAlbums){
 	
 }
 
+function loadGroupsExtraUI(){
+	if( $('.groupCustom') ){
+		var groupCustomUI = '<div>'
+								+ '<div>'
+									+ '<span>Выберите куда сохранять видео:</span>'
+									+ '<span class="fRight">'
+										//+ '<span>[ <a href="#" onclick="MassUploderBox(); return false;">Доб. несколько видео</a> ]</span> '
+										//+ '<span>[ <a href="#" onclick="toGroup(); return false;">Выбор сообщества по ID</a> ]</span> '
+										+ '<span id="goToGroup"></span> '
+									+ '</span>'
+								+ '</div>'
+								+ '<div>'
+									+ '<select name="group_id" class="gr_list w684 border" onchange="changeLinkToGroupAndAlbumList();"></select>'
+								+ '</div>'
+							+ '</div>';
+		$('.groupCustom').innerHTML = groupCustomUI;
+		buildGroupList(profiles[$('#profiles').value].togroup);
+	}
+}
+
+function buildGroupList(group_id){
+	// cleanup
+	$('.gr_list').innerHTML = '';
+	// get groups count 
+	api.req('groups.get',{filter:'moder',count:1},function(groups_data){
+		// console.log(groups_data);
+		if (groups_data.response) {
+			var groups_count = groups_data.response.count;
+			groupsListPreLoader(group_id,groups_count);
+		}
+		else {
+			openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+			console.log(groups_data.error);
+		}
+	});
+	function groupsListPreLoader (group_id,groups_count) {
+		// console.log(group_id,groups_count);
+		var groupsIndex = 0;
+		var groupsListOffset = 0;
+		var groupsListLoader = function(){
+			// console.log(groupsIndex,groupsListOffset,groups_count);
+			if( groupsListOffset < groups_count ){
+				api.req('groups.get',{filter:'moder',count:1000,extended:1,offset:groupsListOffset},function(groupslistdata){
+					if(groupslistdata.response){
+						groupslistdata.response.items.forEach(function(data,index){
+							$('.gr_list').append('<option value="'+groupslistdata.response.items[index].id+'" '+(groupslistdata.response.items[index].id==group_id?'selected="selected"':'')+'>'+field2text(groupslistdata.response.items[index].name)+'</option>');
+						});
+						groupsIndex++; groupsListOffset=groupsIndex*1000;
+						setTimeout(function(){groupsListLoader();},200);
+					}
+					else{
+						openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+						console.log(groupslistdata.error);
+					}
+				});
+			}
+			else{
+				api.req('groups.isMember',{group_id:group_id},function(group_isMember){
+					if(group_isMember.response === 0 || group_isMember.response == 1){
+						// console.log(group_isMember.response);
+						if (group_isMember.response != 1) {
+							api.req('groups.getById',{group_id:group_id},function(extraGroup){
+								if(group_isMember.response){
+									$('.gr_list').append('<option value="'+extraGroup.response[0].id+'" selected="selected">'+field2text(extraGroup.response[0].name)+'</option>');
+								}
+								else{
+									openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+									console.log(group_isMember.error);
+								}
+							});
+						}
+						goToGroupLink();
+						loadAlbums();
+					}
+					else{
+						openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+						console.log(group_isMember.error);
+					}
+				});
+			}
+		}
+		groupsListLoader();
+	}
+}
+
+function changeLinkToGroupAndAlbumList(){
+	goToGroupLink();
+	loadAlbums();
+}
+
+function goToGroupLink(){
+	$('#goToGroup').innerHTML = '[ <a href="http://vk.com/club'+($('.gr_list').value)+'" target="_blank">VK</a> ]';
+}
+
 function prepUploaderBox(){
 	
 	var param = {}; // параметры:
-	param.group_id = $('.gr_list') ? -$('.gr_list').value : 0; // oid = 0 ; текущий пользователь
-	param.title = $('[name="name"]').value === '' ? 'No name' : $('[name="name"]').value;
+	param.group_id = $('.gr_list') ? $('.gr_list').value : 0; // oid = 0 ; текущий пользователь
+	param.title = $('[name="name"]').value;
 	param.description = $('[name="description"]').value;
 	param.album_id = Number($('[name="album_id"]').value);
 	param.wallpost = $('[name="wallpost"]').checked ? 1 : 0;
@@ -479,7 +594,7 @@ function reqUploaderBox(group_id,title,description,album_id,wallpost,repeat,priv
 			
 			vUplID++;
 			vUpl[vUplID] = updata.response.uploader_data;
-			vUpl[vUplID].embed_code = updata.response.embed_code.replace(/&api_hash=[^&]*/,''); // remove apihash param from embed link
+			vUpl[vUplID].embed_code = updata.response.embed_code.replace(/&api_hash=[^&]*/,'');
 			
 			var video_url='<a class="url" href="http://vk.com/video'+vUpl[vUplID].owner_id+'_'+vUpl[vUplID].video_id+'" target="_blank">'+field2text(vUpl[vUplID].title)+' (video'+vUpl[vUplID].owner_id+'_'+vUpl[vUplID].video_id+')</a>';
 			
@@ -490,9 +605,9 @@ function reqUploaderBox(group_id,title,description,album_id,wallpost,repeat,priv
 									  + '<div>'
 										  + '<span>Загрузка видео:</span>'
 										  + '<span class="manag">'
-											  + '<span class="button btn" title="Показать видео" onclick="'+load_video_js+'">i</span>'
-											  + '<span class="button btn" title="Скрыть/показать загрузчик" onclick="toggle($(\'#upl'+vUpl[vUplID].video_id+'\'));">_</span>'
-											  + '<span class="button btn" title="Удалить загрузчик" onclick="$(\'#vfubox'+vUpl[vUplID].video_id+'\').remove();">x</span>'
+											  + '<span class="button" title="Показать видео" onclick="'+load_video_js+'">i</span>'
+											  + '<span class="button" title="Скрыть/показать загрузчик" onclick="toggle($(\'#upl'+vUpl[vUplID].video_id+'\')); return false;">_</span>'
+											  + '<span class="button" title="Удалить загрузчик" onclick="$(\'#vfubox'+vUpl[vUplID].video_id+'\').remove(); return false;">x</span>'
 										  + '</span>'
 									  + '</div>'
 									  + '<div style="clear:both;"></div>'
@@ -539,10 +654,8 @@ function iframeload(id,stat) {
 	
 }
 
-
 function runUpload(upButton){
 	
-	// console.log(upButton);
 	var fdid = upButton.dataset.id;
 	
 	if( !$('#file'+fdid).files[0] ){
@@ -609,3 +722,6 @@ function hideVideoBox(){
 	$('body').style.overflow = 'auto';
 	app.boolean.videobox_open = false;
 }
+
+// groupname mass uploader
+// $('.gr_list').options[$('.gr_list').selectedIndex].text
