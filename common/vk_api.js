@@ -551,7 +551,7 @@ function prepUploaderBox(){
 	
 	var param = {}; // параметры:
 	param.group_id = $('.gr_list') ? $('.gr_list').value : 0; // oid = 0 ; текущий пользователь
-	param.title = $('[name="name"]').value;
+	param.title = $('[name="name"]').value === '' ? 'No name' : $('[name="name"]').value;
 	param.description = $('[name="description"]').value;
 	param.album_id = Number($('[name="album_id"]').value);
 	param.wallpost = $('[name="wallpost"]').checked ? 1 : 0;
