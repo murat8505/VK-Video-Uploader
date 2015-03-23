@@ -20,7 +20,7 @@ if(typeof(profiles) == 'undefined') var profiles={};
 var user={}; user.token = api_token;
 
 var app = {
-	ver: 2.2,
+	ver: 2.3,
 	channel: 'beta', // master or beta
 	update_uri: 'https://github.com/seiya-dev/VK-Video-Uploader/archive/',
 	video_max_size: 2147483648,
@@ -65,6 +65,17 @@ function $(selector,el) {
 
 Element.prototype.append = function(html){
 	this.insertAdjacentHTML('beforeend',html);
+};
+
+Element.prototype.remove = function(){
+	this.parentElement.removeChild(this);
+};
+NodeList.prototype.remove = function() {
+    for(var i = 0, len = this.length; i < len; i++) {
+        if(this[i] && this[i].parentElement) {
+            this[i].parentElement.removeChild(this[i]);
+        }
+    }
 };
 
 function field2text(inputText) {
@@ -358,7 +369,7 @@ function loadUploaderUI(ui){
 							+'<div>'
 								+goButtonCreateUploader
 							+'</div>'
-						 '</div>';
+						+'</div>';
 		$('.add_up').innerHTML=groupAddUI;
 		loadGroupsExtraUI();
 	}
@@ -460,7 +471,7 @@ function loadGroupsExtraUI(){
 									+ '<span>Выберите куда сохранять видео:</span>'
 									+ '<span class="fRight">'
 										//+ '<span>[ <a href="#" onclick="MassUploderBox(); return false;">Доб. несколько видео</a> ]</span> '
-										//+ '<span>[ <a href="#" onclick="toGroup(); return false;">Выбор сообщества по ID</a> ]</span> '
+										+ '<span>[ <a href="#" onclick="selectGroupById(); return false;">Выбор сообщества по ID</a> ]</span> '
 										+ '<span id="goToGroup"></span> '
 									+ '</span>'
 								+ '</div>'
@@ -510,30 +521,27 @@ function buildGroupList(group_id){
 				});
 			}
 			else{
-				api.req('groups.isMember',{group_id:group_id},function(group_isMember){
-					if(group_isMember.response === 0 || group_isMember.response == 1){
-						// console.log(group_isMember.response);
-						if (group_isMember.response != 1) {
-							api.req('groups.getById',{group_id:group_id},function(extraGroup){
-								if(group_isMember.response){
-									$('.gr_list').append('<option value="'+extraGroup.response[0].id+'" selected="selected">'+field2text(extraGroup.response[0].name)+'</option>');
-								}
-								else{
-									openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
-									console.log(group_isMember.error);
-								}
-							});
+				if( typeof(group_id) != 'undefined' ){
+					api.req('groups.getById',{group_id:group_id},function(group_isMember){
+						if(group_isMember.response){
+							if (group_isMember.response[0].is_admin < 1 || group_isMember.response[0].is_member < 1) {
+								$('.gr_list').append('<option value="'+group_isMember.response[0].id+'" selected="selected">'+field2text(group_isMember.response[0].name)+'</option>');
+							}
+							goToGroupLink();
+							loadAlbums();
 						}
-						goToGroupLink();
-						loadAlbums();
-					}
-					else{
-						openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
-						console.log(group_isMember.error);
-					}
-				});
+						else{
+							openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+							console.log(group_isMember.error);
+						}
+					});
+				}
+				else{
+					goToGroupLink();
+					loadAlbums();
+				}
 			}
-		}
+		};
 		groupsListLoader();
 	}
 }
@@ -545,6 +553,26 @@ function changeLinkToGroupAndAlbumList(){
 
 function goToGroupLink(){
 	$('#goToGroup').innerHTML = '[ <a href="http://vk.com/club'+($('.gr_list').value)+'" target="_blank">VK</a> ]';
+}
+
+function selectGroupById(group_id,text){
+	group_id = typeof text !== 'undefined' ? group_id : $('.gr_list').value;
+	text = typeof text !== 'undefined' ? text : '';
+	openAlertBox(
+		'<div>Введите ID сообщества:<br/><input type="number" class="selectGroupById w528" value="'+(group_id)+'" min="1"/></div>'+text,
+		[['selectionGroupById();','Перейти'],['closeAlertBox();','Отмена']]
+	);
+}
+
+function selectionGroupById(){
+	var selected_group_by_id = $('.selectGroupById').value;
+	if( !isNaN(selected_group_by_id) && selected_group_by_id > 0 ){
+		closeAlertBox();
+		buildGroupList(selected_group_by_id);
+	}
+	else{
+		selectGroupById(selected_group_by_id,'<div class="rStar">Ошибка: неверный ID сообщества.</div>');
+	}
 }
 
 function prepUploaderBox(){
