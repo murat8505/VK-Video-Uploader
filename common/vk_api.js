@@ -20,7 +20,7 @@ if(typeof(profiles) == 'undefined') var profiles={};
 var user={}; user.token = api_token;
 
 var app = {
-	ver: 2.3,
+	ver: 2.4,
 	channel: 'beta', // master or beta
 	update_uri: 'https://github.com/seiya-dev/VK-Video-Uploader/archive/',
 	video_max_size: 2147483648,
@@ -59,8 +59,8 @@ api.req = function(method, params, cb) {
 // functions
 
 function $(selector,el) {
-     if (!el) {el = document;}
-     return el.querySelector(selector);
+	 if (!el) {el = document;}
+	 return el.querySelector(selector);
 }
 
 Element.prototype.append = function(html){
@@ -71,11 +71,11 @@ Element.prototype.remove = function(){
 	this.parentElement.removeChild(this);
 };
 NodeList.prototype.remove = function() {
-    for(var i = 0, len = this.length; i < len; i++) {
-        if(this[i] && this[i].parentElement) {
-            this[i].parentElement.removeChild(this[i]);
-        }
-    }
+	for(var i = 0, len = this.length; i < len; i++) {
+		if(this[i] && this[i].parentElement) {
+			this[i].parentElement.removeChild(this[i]);
+		}
+	}
 };
 
 function field2text(inputText) {
@@ -108,7 +108,7 @@ function openAlertBox(text,button){
 	$('#alertbuttons').innerHTML = alert_button;
 	
 	// margin
-	$('#alertbox').style.marginLeft = '-' + (($('#alerttext').offsetWidth+2)/2) +'px';
+	$('#alertbox').style.marginLeft = '-' + ($('#alertbox').offsetWidth/2) +'px';
 	$('#alertbox').style.marginTop = '-' + ($('#alertbox').offsetHeight/2) +'px';
 	
 }
@@ -130,13 +130,13 @@ function selAllText(el){el.focus();el.select();}
 // start app
 
 if (window.addEventListener) {
-    window.addEventListener('load',prepUser,false);
+	window.addEventListener('load',prepUser,false);
 }
 else if(window.attachEvent) {
-    window.attachEvent('onload',prepUser); // ms ie fix
+	window.attachEvent('onload',prepUser); // ms ie fix
 }
 else{
-    window.onload = prepUser;
+	window.onload = prepUser;
 }
 
 window.onbeforeunload = function confirmExit(){
@@ -356,7 +356,6 @@ function loadUploaderUI(ui){
 	}
 	
 	else if(ui=='group'){
-		//$('.add_up').innerHTML = '<div style="text-align:center;">Not implemented yet</div>';
 		app.boolean.videouploader_ready = true;
 		var groupAddUI = '<div id="video_add">'
 							+'<div class="groupCustom"></div>'
@@ -410,14 +409,11 @@ function loadAlbums(add_albumid){
 	});
 }
 
-function addAlbum(txt){
-	txt = typeof txt !== 'undefined' ? txt : '';
+function addAlbum(text){
+	text = typeof text !== 'undefined' ? text : '';
 	openAlertBox(
-		'<div>Введите название альбома:<br/><input type="text" name="toAlbumLoad" class="toAlbumLoad w528" value=""/></div>'+txt,
-		[
-			['toAlbumLoad();','Создать'],
-			['closeAlertBox();','Отмена']
-		]
+		'<div>Введите название альбома:<br/><input type="text" name="toAlbumLoad" class="toAlbumLoad w528" value=""/></div>'+text,
+		[['toAlbumLoad();','Создать'],['closeAlertBox();','Отмена']]
 	);
 }
 function deleteAlbum(album_id){
@@ -470,7 +466,7 @@ function loadGroupsExtraUI(){
 								+ '<div>'
 									+ '<span>Выберите куда сохранять видео:</span>'
 									+ '<span class="fRight">'
-										//+ '<span>[ <a href="#" onclick="MassUploderBox(); return false;">Доб. несколько видео</a> ]</span> '
+										+ '<span>[ <a href="#" onclick="massAddUploaderBoxes(); return false;">Доб. несколько видео</a> ]</span> '
 										+ '<span>[ <a href="#" onclick="selectGroupById(); return false;">Выбор сообщества по ID</a> ]</span> '
 										+ '<span id="goToGroup"></span> '
 									+ '</span>'
@@ -751,5 +747,69 @@ function hideVideoBox(){
 	app.boolean.videobox_open = false;
 }
 
-// groupname mass uploader
-// $('.gr_list').options[$('.gr_list').selectedIndex].text
+function massAddUploaderBoxes(){
+	
+	var priv_param_text = 'Для последующей отправки видеозаписи личным сообщением.\n'
+						+ 'Выбранный альбом игнорируется.\n'
+						+ 'После загрузки с этим параметром видеозапись\n'
+						+ 'не будет отображаться в списке видеозаписей пользователя\n'
+						+ 'и не будет доступна другим пользователям по id.\n'
+						+ '(Использование данной опции не рекомендуется)';
+	var param_is_private_button_html = '<input class="extra_option" name="is_private" type="checkbox" '+(profiles[app.ui_profileid].is_private==1?'checked="checked"':'')+'>'
+									 + '<a href="#" title="'+priv_param_text+'" onclick="return false;">Приватное видео</a>';
+	var param_is_private_button = $('.UpUI').value == 'profile' || $('.UpUI').value == 'group' && profiles[app.ui_profileid].privForGroup == 1 ? param_is_private_button_html : '';
+	var param_additionalSetting = '<span>Дополнительные настройки:</span>'
+						  + '<input class="extra_option" name="wallpost" type="checkbox" '+(profiles[app.ui_profileid].wallpost==1?'checked="checked"':'')+'>'
+						  + '<a href="#" title="После обработки видео, запостить его на стену." onclick="return false;">Опубликовать на стену</a>'
+						  + '<input class="extra_option" name="repeat" type="checkbox">'
+						  + '<a href="#" title="Зацикливание воспроизведения видеозаписи." onclick="return false;" '+(profiles[app.ui_profileid].repeat==1?'checked="checked"':'')+'>Зациклить видео</a>'
+						  + param_is_private_button;
+	
+	var releaseTeam = typeof profiles[$('#profiles').value].releaseTeam != 'undefined' ? profiles[$('#profiles').value].releaseTeam : '';
+	var videoTitleTemplate = typeof profiles[$('#profiles').value].videoTitleTemplate != 'undefined' ? profiles[$('#profiles').value].videoTitleTemplate : '[%group%] %title_en% | %title_ru% [%episode%] [%traslator%]';
+	var massAddUploaderBoxesUI = '<div class="form">'
+									+ '<div>Сообщество:</div>'
+									+ '<div class="tLeft">'
+										+ '<input class="w120" type="number" id="mu_group_id" value="'+$('.gr_list').value+'" disabled="disabled"/>'
+										+ '<span class="marginLeft5">'+field2text( $('.gr_list').options[$('.gr_list').selectedIndex].text )+'</span>'
+									+ '</div>'
+									+ '<div>Шаблон название видео:</div>'
+									+ '<div><input class="w686" type="text" id="mu_video_title" value="'+field2text(videoTitleTemplate)+'"/></div>'
+									+ '<div>Релиз от:</div>'
+									+ '<div><input class="w686" type="text" id="mu_releaser" value="'+field2text(releaseTeam)+'"/></div>'
+									+ '<div>Название (Романзи/Английское)<span class="rStar" title="Обязательное поле">*</span>:</div>'
+									+ '<div><input class="w686" type="text" id="mu_title_en" required="required" value=""/></div>'
+									+ '<div>Название (Русское):</div>'
+									+ '<div><input class="w686" type="text" id="mu_title_ru" value=""/></div>'
+									+ '<div id="massAddNums">'
+										+'<div id="massAddNumStart">'
+											+ '<div>Начинать с эпизода #<span class="rStar" title="Обязательное поле">*</span></div>'
+											+ '<div><input class="w227" type="number" id="mu_start" required="required" value="1"/></div>'
+										+'</div>'
+										+'<div id="massAddNumEnd">'
+											+ '<div>Закончить на эпизоде #<span class="rStar" title="Обязательное поле">*</span></div>'
+											+ '<div><input class="w227" type="number" id="mu_end" required="required" value="12"/></div>'
+										+'</div>'
+										+'<div id="massAddNumLength">'
+											+ '<div>Цифр в номере эп. (2 или 3)<span class="rStar" title="Обязательное поле">*</span>:</div>'
+											+ '<div><input class="w227" type="number" id="mu_numep" required="required" value="2"/></div>'
+										+'</div>'
+									+ '</div>'
+									+ '<div>Перевод / Озвучка:</div>'
+									+ '<div><input class="w686" type="text" id="mu_translate" value=""/></div>'
+									+ '<div>Альбом:</div>'
+									+ '<div class="tLeft">'
+										+ '<input class="w120" type="number" id="mu_album_id" value="'+($('.albumList').value)+'" disabled="disabled"/>'
+										+ '<span class="marginLeft5">'+field2text($('.albumList').options[$('.albumList').selectedIndex].text)+'</span>'
+									+ '</div>'
+									+ '<div id="mass_extra" style="text-align:right;">'
+										+ param_additionalSetting
+									+ '</div>'
+								+'</div>';
+								
+	openAlertBox(
+		massAddUploaderBoxesUI,
+		[['closeAlertBox();','Mass Add Demo'],['closeAlertBox();','Добавить'],['closeAlertBox();','Закрыть']]
+	);
+	
+}
