@@ -286,11 +286,15 @@ td{
 	left: 1px;
 }
 
-.manag .button{
+.manag .button,#spoilerAddVideo{
 	width: 16px;
 	padding: 1px;
 	display: inline-block;
 	margin-left: 5px;
+}
+
+#spoilerAddVideo{
+	margin-left: 0;
 }
 
 .progress{

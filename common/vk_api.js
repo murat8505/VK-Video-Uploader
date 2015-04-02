@@ -20,7 +20,7 @@ if(typeof(profiles) == 'undefined') var profiles={};
 var user={}; user.token = api_token;
 
 var app = {
-	ver: 2.4,
+	ver: 2.5,
 	channel: 'beta', // master or beta
 	update_uri: 'https://github.com/seiya-dev/VK-Video-Uploader/archive/',
 	video_max_size: 2147483648,
@@ -220,7 +220,7 @@ function loadUser(){
 				}
 			});
 			
-			$('#right_nav').append(' <a style="width:16px;" id="spoilerAddVideo" class="btn" href="#" onclick="toggleAddVideo();">-</a>');
+			$('#right_nav').append(' <span id="spoilerAddVideo" class="button" onclick="toggleAddVideo();">-</a></span>');
 			
 			selectMainUploaderProfile();
 			
@@ -237,7 +237,6 @@ function toggleAddVideo(){
 		$('#adding_box').style.display = 'none';
 		$('#spoilerAddVideo').innerHTML='+';
 	}
-	return false;
 }
 
 function selectMainUploaderProfile(){
@@ -491,7 +490,7 @@ function buildGroupList(group_id){
 			groupsListPreLoader(group_id,groups_count);
 		}
 		else {
-			openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+			openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Закрыть']]);
 			console.log(groups_data.error);
 		}
 	});
@@ -511,7 +510,7 @@ function buildGroupList(group_id){
 						setTimeout(function(){groupsListLoader();},200);
 					}
 					else{
-						openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+						openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Закрыть']]);
 						console.log(groupslistdata.error);
 					}
 				});
@@ -527,7 +526,7 @@ function buildGroupList(group_id){
 							loadAlbums();
 						}
 						else{
-							openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Отмена']]);
+							openAlertBox('Неизвестная ошибка.',[['closeAlertBox();','Закрыть']]);
 							console.log(group_isMember.error);
 						}
 					});
@@ -809,7 +808,182 @@ function massAddUploaderBoxes(){
 								
 	openAlertBox(
 		massAddUploaderBoxesUI,
-		[['closeAlertBox();','Mass Add Demo'],['closeAlertBox();','Добавить'],['closeAlertBox();','Закрыть']]
+		[['massUploderBoxTest();','Добавить'],['closeAlertBox();','Закрыть']]
 	);
 	
+}
+
+function massUploderBoxTest(){
+	
+	var massvideodata = {};
+	app.boolean.videouploader_ready = true;
+	
+	if( !isNaN($('#mu_group_id').value) && parseInt($('#mu_group_id').value,10) > 0 && app.boolean.videouploader_ready){
+		massvideodata.group_id = parseInt($('#mu_group_id').value,10);
+	}
+	else if(app.boolean.videouploader_ready){
+		MassUploderBoxError(1);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if( isNaN($('#mu_start').value) && parseInt($('#mu_start').value,10) < 0 && app.boolean.videouploader_ready){
+		MassUploderBoxError(2);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if( isNaN($('#mu_end').value) && parseInt($('#mu_end').value,10) < 0 && app.boolean.videouploader_ready){
+		MassUploderBoxError(2);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if( parseInt($('#mu_start').value,10) < 1 && app.boolean.videouploader_ready){
+		MassUploderBoxError(5);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if( parseInt($('#mu_end').value,10) < parseInt($('#mu_start').value,10) && app.boolean.videouploader_ready){
+		MassUploderBoxError(3);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if( parseInt($('#mu_end').value,10) > 999 && app.boolean.videouploader_ready){
+		MassUploderBoxError(4);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	// $('#mu_video_title').value
+	if ( 
+		$('#mu_video_title').value.indexOf('%title_en%') == -1 
+		// || $('#mu_video_title').value.indexOf('%title_ru%') == -1 
+		|| $('#mu_video_title').value.indexOf('%episode%') == -1
+	){
+		MassUploderBoxError(7);
+		app.boolean.videouploader_ready = false;
+	}
+	
+	if(app.boolean.videouploader_ready){
+		massvideodata.title_template = $('#mu_video_title').value;
+		massvideodata.releaser = $('#mu_releaser').value;
+		massvideodata.title_en = $('#mu_title_en').value;
+		massvideodata.title_ru = $('#mu_title_ru').value;
+		massvideodata.start_ep = parseInt($('#mu_start').value,10);
+		massvideodata.end_ep = parseInt($('#mu_end').value,10);
+		massvideodata.numep = parseInt($('#mu_numep').value,10);
+		massvideodata.translate = $('#mu_translate').value;
+		massvideodata.album = $('.albumList').value;
+		massvideodata.wallpost = $('#mass_extra [name="wallpost"]').checked ? 1 : 0;
+		massvideodata.repeat = $('#mass_extra [name="repeat"]').checked ? 1 : 0;
+		massvideodata.priv = profiles[$('#profiles').value].privForGroup == 1 ? (  $('#mass_extra [name="is_private"]').checked ? 1 : 0 ) : 0;
+		doMassAddUpload(
+			massvideodata.title_template,
+			massvideodata.group_id,
+			massvideodata.releaser,
+			massvideodata.title_en,
+			massvideodata.title_ru,
+			massvideodata.start_ep,
+			massvideodata.end_ep,
+			massvideodata.numep,
+			massvideodata.translate,
+			massvideodata.album,
+			massvideodata.wallpost,
+			massvideodata.repeat,
+			massvideodata.priv
+		);
+		closeAlertBox();
+	}
+	
+}
+
+function MassUploderBoxError(errorcode){
+	var massboxerror = {};
+	switch (errorcode){
+		case 1:
+			massboxerror.text = 'ID группы не число или меньше 1.';
+			break;
+		case 2:
+			massboxerror.text = 'Номер эпизода не число.';
+			break;
+		case 3:
+			massboxerror.text = 'Конечный эпизод меньше чем начальный.';
+			break;
+		case 4:
+			massboxerror.text = 'Максимальное количество серий 999.';
+			break;
+		case 5:
+			massboxerror.text = 'Можно начинать только с первой серии.';
+			break;
+		case 7:
+			massboxerror.text = 'Шаблон название видео должен содержать %title_en% и %episode% (Обязательные поля).';
+			break;
+		default:
+			massboxerror.text = 'Неизвестная ошибка.';
+	}
+	openAlertBox(
+		'Ошибка'+(errorcode?' #'+errorcode:'')+': '+massboxerror.text,
+		[['massAddUploaderBoxes();','Попробывать ещё раз']]
+	);
+}
+
+function doMassAddUpload(
+		title_template,
+		to_id,
+		relgroup,
+		titlejp,
+		titleru,
+		epns,
+		epnt,
+		epnn,
+		tr,
+		album,
+		wallpost,
+		repeat,
+		priv
+	){
+
+	var updb = {};
+	app.boolean.massuploder_ready = true;
+	
+	// основная замена
+	updb.title_template = title_template.replace('%title_en%',titlejp);
+	
+	// доп замены // [%group%] %title_en% | %title_ru% [%episode%] [%traslator%]
+	updb.title_template = updb.title_template.indexOf('%group%') != -1 ? updb.title_template.replace('%group%',relgroup) : updb.title_template;
+	updb.title_template = updb.title_template.indexOf('%title_ru%') != -1 ? updb.title_template.replace('%title_ru%',titleru) : updb.title_template;
+	updb.title_template = updb.title_template.indexOf('%traslator%') != -1 ? updb.title_template.replace('%traslator%',tr) : updb.title_template;
+	console.log(updb.title_template);
+	
+	// confug
+	updb.group = to_id;
+	updb.album_id = album;
+	updb.wallpost = wallpost;
+	updb.repeat = repeat;
+	updb.priv = priv;
+	
+	// nums
+	updb.ep_first = epns;
+	updb.ep_total = epnt+1;
+	updb.ep_numbers = !isNaN(epnn) ? ( epnn>3||epnn==3||epnt>99 ? 3 : ( epnn<2 ? 2 : 2 )) : 2;
+	
+	var lpad = function(str, len) {
+		str = str + ''; var z = '0', plen = len - str.length;
+		return plen <= 0 ? str : new Array(plen + 1).join(z) + str;
+	};
+	
+	function doAddEps(){
+		if(updb.ep_total>updb.ep_first && app.boolean.massuploder_ready){
+			var episode_num = lpad(updb.ep_first,updb.ep_numbers);
+			var vkvideo_title = updb.title_template.replace('%episode%',episode_num);
+			reqUploaderBox(updb.group,vkvideo_title,'',updb.album_id,updb.wallpost,updb.repeat,0,0,updb.priv);
+			updb.ep_first = updb.ep_first + 1;
+			setTimeout(function(){doAddEps();},1000);
+		}
+		else{
+			app.boolean.massuploder_ready = true;
+		}
+	}
+	
+	if(!isNaN(updb.ep_first) && !isNaN(updb.ep_total)){
+		doAddEps();
+	}
+
 }
